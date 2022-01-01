@@ -22,7 +22,21 @@
 ## Dokumentacje
 
 - [WPROJ](https://studia.elka.pw.edu.pl/f-raw/21Z/103A-ELxxx-ISP-WPROJ/priv//index.html)
-- [MAX30100]()
-- [DHT11]()
+- [MAX30100](https://pekolibrary.wordpress.com/2018/05/27/rcwl-0530-max30100/)
+- [DHT11](https://kamami.pl/temperatury/197416-dht11.html)
+- [DFPlayer Mini](https://picaxe.com/docs/spe033.pdf)
+- [PAM8403](https://botland.com.pl/odtwarzacze-mp3-wav-ogg-midi/6641-wzmacniacz-audio-stereo-pam8403-5v-3w-dwukanalowy-zielony-5904422359850.html)
 
 ## Żródła na podstawie których został stworzony schemat
+
+### Wzmaczniacz - DFPlayer Mini - Głośnik
+![](readme_files/file1.png)
+### DHT11
+![](readme_files/file2.png)
+![](readme_files/file3.png)
+### MAX30100
+![](readme_files/file4.png)
+### Ekran
+![](readme_files/file5.png)
+### Przyciski i diody
+![](readme_files/file6.png)
