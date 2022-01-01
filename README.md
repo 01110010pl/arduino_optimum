@@ -1,13 +1,17 @@
-# arduino-optimum-project
+# Arduino Optimum Project
+
+## Wstęp
+
+Niby ogarniam te arduino, ale działać to nic nie działa xD. Teraz to już nawet najprostrzy układ z ekranem.
 
 ## Elementy
 
 - 1x MAX30100 (RCWL-0530) (Pulsometr)
 - 1x DHT11 (Czujnik temperatury i wilgoci)
-- 1x DFPlayer Mini (odtwarzacz kart/muzyki)
-- 1x SSD1306 (ekran)
+- 1x DFPlayer Mini (Odtwarzacz kart/muzyki)
+- 1x SSD1306 (Ekran)
 - 1x Głośnik
-- 1x PAM8403 (Wzmacniacz)
+- 1x PAM8403/GF1002 (Wzmacniacz)
 - 3x Diody
 - 3x Przyciski
 - 3x Rezystor 470R
