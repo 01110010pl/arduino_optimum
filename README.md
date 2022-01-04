@@ -2,7 +2,7 @@
 
 ## Wstęp
 
-Niby ogarniam te arduino, ale działać to nic nie działa xD. Teraz to już nawet najprostrzy układ z ekranem.
+Jak narazie brak.
 
 ## Elementy
 
