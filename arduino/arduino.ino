@@ -180,8 +180,12 @@ void loop()
       counter += 1;
       if(counter == 8) break;
     }
-    delay(200);
+    ekran.setTextSize(1);
+    ekran.setCursor(22, 45);
+    ekran.print("by POGGERS TEAM");
+    ekran.display();
     menu.intro = false;
+    delay(1000);
     ekran.clearDisplay();
   }
   
