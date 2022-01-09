@@ -183,6 +183,7 @@ void showLCD(String message)
 // Loop
 void loop() 
 {
+  // Sprawdzenie przycisków
   if(digitalRead(BUTTON_NEXT) == HIGH)
   {
     if(menu.side2 == 1)
@@ -190,6 +191,27 @@ void loop()
       if(menu.side1 == 5) menu.side1 = 1;
       else menu.side1 += 1;
     }
+  }
+  if(digitalRead(BUTTON_ACCEPT) == HIGH)
+  {
+    if(menu.side2 == 1) menu.side2 = 2;
+  }
+  if(digitalRead(BUTTON_EXIT) == HIGH)
+  {
+    if(menu.side2 == 2) menu.side2 = 1;
+  }
+  // Sprawdzenie trybu światła
+  if(light.turnOn == true)
+  {
+    digitalWrite(LED_RED, HIGH);
+    digitalWrite(LED_BLUE, HIGH);
+    digitalWrite(LED_GREEN, HIGH);
+  }
+  else
+  {
+    digitalWrite(LED_RED, LOW);
+    digitalWrite(LED_BLUE, LOW);
+    digitalWrite(LED_GREEN, LOW);
   }
   if(menu.side2 == 1)
   {
@@ -218,6 +240,45 @@ void loop()
       case 5:
       {
         showLCD("5) Tryb pracy");
+        break;
+      }
+    }
+  }
+  else
+  {
+    switch(menu.side1)
+    {
+      case 1:
+      {
+        showLCD("A");
+        break;
+      }
+      case 2:
+      {
+        showLCD("B");
+        break;
+      }
+      case 3:
+      {
+        if(digitalRead(BUTTON_ACCEPT) == HIGH)
+        {
+          if(light.turnOn == true) light.turnOn = false;
+          else light.turnOn = true;
+        }
+        String x = "3) Tryb automatyczny swiatla\nStatus: ";
+        if(light.turnOn == false) x += "OFF";
+        else x += "ON";
+        showLCD(x);
+        break;
+      }
+      case 4:
+      {
+        showLCD("D");
+        break;
+      }
+      case 5:
+      {
+        showLCD("E");
         break;
       }
     }
