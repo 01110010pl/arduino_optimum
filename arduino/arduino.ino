@@ -40,7 +40,7 @@ class Light
 {
   public:
     bool turnOn;
-    Light()
+    Light() 
     {
       turnOn = false;
     }
@@ -52,7 +52,7 @@ class MP3
     bool turnOn;
     MP3()
     {
-      turnOn = false;
+       turnOn = false;
     }
 };
 
@@ -174,7 +174,7 @@ void showLCD(String message)
 {
   ekran.clearDisplay();
   ekran.setTextSize(1.5);
-  ekran.setCursor(10, 0);
+  ekran.setCursor(0, 0);
   ekran.print(message);
   ekran.display();
   delay(250);
@@ -250,7 +250,12 @@ void loop()
     {
       case 1:
       {
-        showLCD("A");
+        String x = "1) Puls\nPuls: ";
+        x += String(pulse.heartRate);
+        x += "bpm\nSp02: ";
+        x += String(pulse.sp02);
+        x + "%";
+        showLCD(x);
         break;
       }
       case 2:
