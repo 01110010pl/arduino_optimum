@@ -7,7 +7,7 @@
 
 // Derektywy preprocesora
 #define DHTPIN  4
-#define DHTTYPE DHT11   // DHT 11
+#define DHTTYPE DHT11
 #define REPORTING_PERIOD_MS 1000
 
 // Klasy
@@ -19,6 +19,7 @@ class Temperature
     float humidity;
     float indHC;
     float indHF;
+    bool modeC;
     Temperature()
     {
       temC = 0;
@@ -26,6 +27,7 @@ class Temperature
       humidity = 0;
       indHC = 0;
       indHF = 0;
+      modeC = true;
     }
 };
 
@@ -61,10 +63,12 @@ class Menu
   public:
     int side1;
     int side2;
+    bool intro;
   Menu()
   {
     side1 = 1;
     side2 = 1;
+    intro = true;
   }
 };;
 
@@ -125,32 +129,6 @@ void setup()
 }
 
 // Metody
-void temperatura()
-{
-  delay(2000);
-  float h = dht.readHumidity();
-  float t = dht.readTemperature();
-  float f = dht.readTemperature(true);
-  if (isnan(h) || isnan(t) || isnan(f)) 
-  {
-    Serial.println(F("Failed to read from DHT sensor!"));
-    return;
-  }
-  float hif = dht.computeHeatIndex(f, h);
-  float hic = dht.computeHeatIndex(t, h, false);
-  Serial.print(F("Humidity: "));
-  Serial.print(h);
-  Serial.print(F("%  Temperature: "));
-  Serial.print(t);
-  Serial.print(F("°C "));
-  Serial.print(f);
-  Serial.print(F("°F  Heat index: "));
-  Serial.print(hic);
-  Serial.print(F("°C "));
-  Serial.print(hif);
-  Serial.println(F("°F"));
-}
-
 void onBeatDetected()
 {
     Serial.println("WYkryto puls!");
@@ -183,6 +161,30 @@ void showLCD(String message)
 // Loop
 void loop() 
 {
+  // Intro
+  if(menu.intro)
+  {
+    String brand = "OPTIMUM";
+    char message[8] = {' ', ' ', ' ', ' ', ' ', ' ', ' ', '\0'};
+    message[0] = brand[0];
+    int counter = 1;
+    while(true)
+    {
+      ekran.clearDisplay();
+      ekran.setTextSize(2);
+      ekran.setCursor(25, 25);
+      ekran.print(message);
+      ekran.display();
+      delay(200);
+      message[counter] = brand[counter];
+      counter += 1;
+      if(counter == 8) break;
+    }
+    delay(200);
+    menu.intro = false;
+    ekran.clearDisplay();
+  }
+  
   // Sprawdzenie przycisków
   if(digitalRead(BUTTON_NEXT) == HIGH)
   {
@@ -199,7 +201,13 @@ void loop()
   if(digitalRead(BUTTON_EXIT) == HIGH)
   {
     if(menu.side2 == 2) menu.side2 = 1;
+    else
+    {
+      if(menu.side1 == 1) menu.side1 = 5;
+      else menu.side1 -= 1;
+    }
   }
+
   // Sprawdzenie trybu światła
   if(light.turnOn == true)
   {
@@ -213,6 +221,18 @@ void loop()
     digitalWrite(LED_BLUE, LOW);
     digitalWrite(LED_GREEN, LOW);
   }
+
+  // AKtualizacja temperatury
+  temp.humidity = dht.readHumidity();
+  temp.temC = dht.readTemperature();
+  temp.temF = dht.readTemperature(true);
+  if (isnan(temp.humidity) || isnan(temp.temC) || isnan(temp.temF)) 
+  {
+    Serial.println(F("Failed to read from DHT sensor!"));
+    return;
+  }
+  temp.indHF = dht.computeHeatIndex(temp.temF, temp.humidity);
+  temp.indHC = dht.computeHeatIndex(temp.temC, temp.humidity, false);
   if(menu.side2 == 1)
   {
     switch(menu.side1)
@@ -260,7 +280,25 @@ void loop()
       }
       case 2:
       {
-        showLCD("B");
+        if(digitalRead(BUTTON_NEXT) == HIGH)
+        {
+          if(temp.modeC) temp.modeC = false;
+          else temp.modeC = true;
+        }
+        String x = "";
+        if(temp.modeC)
+        {
+            x = "Temperatura: \n" + String(temp.temC) + "C\n";
+            x += "Wilgotnosc: \n" + String(temp.humidity) + "%\n";
+            x += "Indeks ciepla: \n" + String(temp.indHC) + " C";
+          }
+          else
+          {
+            x = "Temperatura: \n" + String(temp.temF) + "F\n";
+            x += "Wilgotnosc: \n" + String(temp.humidity) + "%\n";
+            x += "Indeks ciepla: \n" + String(temp.indHF) + " F";
+          }
+        showLCD(x);
         break;
       }
       case 3:
@@ -270,7 +308,7 @@ void loop()
           if(light.turnOn == true) light.turnOn = false;
           else light.turnOn = true;
         }
-        String x = "3) Tryb automatyczny swiatla\nStatus: ";
+        String x = "Tryb automatyczny swiatla\nStatus: ";
         if(light.turnOn == false) x += "OFF";
         else x += "ON";
         showLCD(x);
