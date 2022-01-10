@@ -59,8 +59,7 @@ class MP3
     MP3()
     {
        turnOn = false;
-       genre = 1;
-       
+       genre = 1; 
     }
 };
 
@@ -70,24 +69,24 @@ class Menu
     int side1;
     int side2;
     bool intro;
-  Menu()
-  {
-    side1 = 1;
-    side2 = 1;
-    intro = true;
-  }
+    Menu()
+    {
+      side1 = 1;
+      side2 = 1;
+    }
 };
 
 // Zmienne
 uint32_t tsLastReport = 0;
-const int SZEROKOSC = 128;
-const int WYSOKOSC  = 64;
+const int WIDTH_OLED = 128;
+const int HEIGHT_OLED = 64;
 const int BUTTON_NEXT = 39;
 const int BUTTON_ACCEPT = 36;
 const int BUTTON_EXIT = 34;
 const int LED_RED = 18;
 const int LED_GREEN= 19;
 const int LED_BLUE = 23;
+float arrayOLEDvoid[2] = {0, 0};
 int delayms = 100;
 Temperature temp;
 Menu menu;
@@ -98,16 +97,24 @@ Pulse pulse;
 // Inicjalizacja czujników
 DHT dht(DHTPIN, DHTTYPE);
 PulseOximeter pox;
-Adafruit_SSD1306 ekran(SZEROKOSC, WYSOKOSC, &Wire, -1);
+Adafruit_SSD1306 OLEDscreen(WIDTH_OLED, HEIGHT_OLED, &Wire, -1);
 HardwareSerial mySoftwareSerial(1);
 DFRobotDFPlayerMini myDFPlayer;
+
+// Lista funkcji
+void intro();
+void setup();
+void puls();
+void onBeatDetected();
+void showOLED(String message, float sizeMessage = 1.5, float cursorX = 0.0, float cursorY = 0.0, int delayShow = 250, bool clearBegin = true);
+void loop();
 
 // Setup
 void setup() 
 {
   Serial.begin(115200);
 
-  // PINY
+  // Piny
   pinMode(BUTTON_ACCEPT, INPUT_PULLUP);
   pinMode(BUTTON_EXIT, INPUT_PULLUP);
   pinMode(BUTTON_NEXT, INPUT_PULLUP);
@@ -118,102 +125,44 @@ void setup()
   // Puls
   if (!pox.begin()) 
   {
-    Serial.println("FAILED");
-    for(;;);
+    Serial.println("PULSE FAILED");
+    exit(0);
   } 
-  else Serial.println("SUCCESS");
+  else Serial.println("PULSE SUCCESS");
   pox.setOnBeatDetectedCallback(onBeatDetected);
 
   // Temperatura
   dht.begin();
 
   // Ekran
-  if(!ekran.begin(SSD1306_SWITCHCAPVCC, 0x3C)) 
+  if(!OLEDscreen.begin(SSD1306_SWITCHCAPVCC, 0x3C)) 
   {
-    Serial.println("Błąd inicjalizacji wyświetlacza!");
-    exit(0); // Nie idź dalej.
+    Serial.println("OLED SCREEN FAILED");
+    exit(0);
   }
-  ekran.setTextColor(WHITE);
-  ekran.cp437(true);
+  OLEDscreen.setTextColor(WHITE);
+  OLEDscreen.cp437(true);
+  OLEDscreen.clearDisplay();
 
-  //MP3
+  // MP3
   mySoftwareSerial.begin(9600, SERIAL_8N1, 16, 17);
   if (!myDFPlayer.begin(mySoftwareSerial)) 
   {
     Serial.println(myDFPlayer.readType(), HEX);
-    Serial.println(F("Unable to begin:"));
-    Serial.println(F("1.Please recheck the connection!"));
-    Serial.println(F("2.Please insert the SD card!"));
-    while(true);
+    Serial.println("MP3 PLAYER FAILED");
+    exit(0);
   }
   myDFPlayer.setTimeOut(500);
   myDFPlayer.volume(0);
   myDFPlayer.EQ(DFPLAYER_EQ_NORMAL);
   myDFPlayer.outputDevice(DFPLAYER_DEVICE_SD);
   for(int i=0; i<4; i++) mp3.sizeFolders[i] = myDFPlayer.readFileCountsInFolder(i + 1);
-}
-
-// Metody
-void onBeatDetected()
-{
-    Serial.println("WYkryto puls!");
-}
-
-void puls()
-{
-  pox.update();
-  if (millis() - tsLastReport > REPORTING_PERIOD_MS) 
-  {
-      Serial.print("Heart rate:");
-      Serial.print(pox.getHeartRate());
-      Serial.print("bpm / SpO2:");
-      Serial.print(pox.getSpO2());
-      Serial.println("%");
-      tsLastReport = millis();
-  }
-}
-
-void showLCD(String message)
-{
-  ekran.clearDisplay();
-  ekran.setTextSize(1.5);
-  ekran.setCursor(0, 0);
-  ekran.print(message);
-  ekran.display();
-  delay(250);
+  intro();
 }
 
 // Loop
 void loop() 
 {
-  // Intro
-  if(menu.intro)
-  {
-    String brand = "OPTIMUM";
-    char message[8] = {' ', ' ', ' ', ' ', ' ', ' ', ' ', '\0'};
-    message[0] = brand[0];
-    int counter = 1;
-    while(true)
-    {
-      ekran.clearDisplay();
-      ekran.setTextSize(2);
-      ekran.setCursor(25, 25);
-      ekran.print(message);
-      ekran.display();
-      delay(200);
-      message[counter] = brand[counter];
-      counter += 1;
-      if(counter == 8) break;
-    }
-    ekran.setTextSize(1);
-    ekran.setCursor(22, 45);
-    ekran.print("by POGGERS TEAM");
-    ekran.display();
-    menu.intro = false;
-    delay(1000);
-    ekran.clearDisplay();
-  }
-  
   // Sprawdzenie przycisków
   if(digitalRead(BUTTON_NEXT) == HIGH)
   {
@@ -237,22 +186,22 @@ void loop()
     }
   }
 
-  //MP3
-if(mp3.turnOn)
-{
-  if (myDFPlayer.available()) 
+  // MP3
+  if(mp3.turnOn)
   {
-    if (myDFPlayer.readType()==DFPlayerPlayFinished) 
+    if (myDFPlayer.available()) 
     {
-      Serial.println(myDFPlayer.read());
-      Serial.println(F("next--------------------"));
-      myDFPlayer.playLargeFolder(mp3.genre, random(1, mp3.sizeFolders[mp3.genre - 1]));  //Play next mp3 every 3 second.
-      Serial.println(F("readCurrentFileNumber--------------------"));
-      Serial.println(myDFPlayer.readCurrentFileNumber()); //read current play file number
-      delay(500);
+      if (myDFPlayer.readType()==DFPlayerPlayFinished) 
+      {
+        Serial.println(myDFPlayer.read());
+        Serial.println(F("next--------------------"));
+        myDFPlayer.playLargeFolder(mp3.genre, random(1, mp3.sizeFolders[mp3.genre - 1]));  //Play next mp3 every 3 second.
+        Serial.println(F("readCurrentFileNumber--------------------"));
+        Serial.println(myDFPlayer.readCurrentFileNumber()); //read current play file number
+        delay(500);
+      }
     }
   }
-}
 
   // Sprawdzenie trybu światła
   if(light.turnOn == true)
@@ -268,7 +217,7 @@ if(mp3.turnOn)
     digitalWrite(LED_GREEN, LOW);
   }
 
-  // AKtualizacja temperatury
+  // Aktualizacja temperatury
   temp.humidity = dht.readHumidity();
   temp.temC = dht.readTemperature();
   temp.temF = dht.readTemperature(true);
@@ -285,27 +234,27 @@ if(mp3.turnOn)
     {
       case 1:
       {
-        showLCD("1) Puls");
+        showOLED("1) Puls");
         break;
       }
       case 2:
       {
-        showLCD("2) Temperatura");
+        showOLED("2) Temperatura");
         break;
       }
       case 3:
       {
-        showLCD("3) Swiatlo");
+        showOLED("3) Swiatlo");
         break;
       }
       case 4:
       {
-        showLCD("4) Muzyka");
+        showOLED("4) Muzyka");
         break;
       }
       case 5:
       {
-        showLCD("5) Tryb pracy");
+        showOLED("5) Tryb pracy");
         break;
       }
     }
@@ -321,7 +270,7 @@ if(mp3.turnOn)
         x += "bpm\nSp02: ";
         x += String(pulse.sp02);
         x + "%";
-        showLCD(x);
+        showOLED(x);
         break;
       }
       case 2:
@@ -344,7 +293,7 @@ if(mp3.turnOn)
             x += "Wilgotnosc: \n" + String(temp.humidity) + "%\n";
             x += "Indeks ciepla: \n" + String(temp.indHF) + " F";
           }
-        showLCD(x);
+        showOLED(x);
         break;
       }
       case 3:
@@ -357,7 +306,7 @@ if(mp3.turnOn)
         String x = "Tryb automatyczny swiatla\nStatus: ";
         if(light.turnOn == false) x += "OFF";
         else x += "ON";
-        showLCD(x);
+        showOLED(x);
         break;
       }
       case 4:
@@ -405,14 +354,60 @@ if(mp3.turnOn)
         x += "Status odtwarzania:\n";
         if(mp3.turnOn) x += "ODTWARZANIE";
         else x += "STOP";
-        showLCD(x);
+        showOLED(x, 1.5, 0, 0, 250);
         break;
       }
       case 5:
       {
-        showLCD("E");
         break;
       }
     }
   }
+}
+
+// Metody
+void onBeatDetected()
+{
+    Serial.println("Wykryto puls!");
+}
+
+void puls()
+{
+  pox.update();
+  if (millis() - tsLastReport > REPORTING_PERIOD_MS) 
+  {
+      Serial.print("Heart rate:");
+      Serial.print(pox.getHeartRate());
+      Serial.print("bpm / SpO2:");
+      Serial.print(pox.getSpO2());
+      Serial.println("%");
+      tsLastReport = millis();
+  }
+}
+
+void showOLED(String message, float sizeMessage, float cursorX, float cursorY , int delayShow, bool clearBegin)
+{
+  if(clearBegin) OLEDscreen.clearDisplay();
+  OLEDscreen.setTextSize(sizeMessage);
+  OLEDscreen.setCursor(cursorX, cursorY);
+  OLEDscreen.print(message);
+  OLEDscreen.display();
+  delay(delayShow);
+}
+
+void intro()
+{
+    String brand = "OPTIMUM";
+    char message[8] = {' ', ' ', ' ', ' ', ' ', ' ', ' ', '\0'};
+    message[0] = brand[0];
+    int counter = 1;
+    while(true)
+    {
+      showOLED(message, 2, 25, 25, 200);
+      message[counter] = brand[counter];
+      counter += 1;
+      if(counter == 8) break;
+    }
+    showOLED("by POGGERS TEAM", 1, 22, 45, 1000, false);
+    OLEDscreen.clearDisplay();
 }
