@@ -2,10 +2,9 @@
 
 ## Wstęp
 
-<p align="center" float="left">
-  <img src="readme_files/file1.png" alt="drawing" width="250"/>
-  <img src="readme_files/file2.gif" alt="drawing" width="250"/>
-</p>
+<p align="center"><img src="readme_files/file1.png" alt="drawing" width="250"/></p>
+
+<p align="center"><img src="readme_files/file2.gif" alt="drawing" width="250"/></p>
 
 ## Elementy
 

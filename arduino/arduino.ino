@@ -4,6 +4,8 @@
 #include "MAX30100_PulseOximeter.h"
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <Arduino.h>
+#include "DFRobotDFPlayerMini.h"
 
 // Derektywy preprocesora
 #define DHTPIN  4
@@ -52,9 +54,13 @@ class MP3
 {
   public:
     bool turnOn;
+    int genre;
+    int sizeFolders[4] = {0, 0, 0, 0};
     MP3()
     {
        turnOn = false;
+       genre = 1;
+       
     }
 };
 
@@ -70,7 +76,7 @@ class Menu
     side2 = 1;
     intro = true;
   }
-};;
+};
 
 // Zmienne
 uint32_t tsLastReport = 0;
@@ -82,6 +88,7 @@ const int BUTTON_EXIT = 34;
 const int LED_RED = 18;
 const int LED_GREEN= 19;
 const int LED_BLUE = 23;
+int delayms = 100;
 Temperature temp;
 Menu menu;
 MP3 mp3;
@@ -92,6 +99,8 @@ Pulse pulse;
 DHT dht(DHTPIN, DHTTYPE);
 PulseOximeter pox;
 Adafruit_SSD1306 ekran(SZEROKOSC, WYSOKOSC, &Wire, -1);
+HardwareSerial mySoftwareSerial(1);
+DFRobotDFPlayerMini myDFPlayer;
 
 // Setup
 void setup() 
@@ -126,6 +135,22 @@ void setup()
   }
   ekran.setTextColor(WHITE);
   ekran.cp437(true);
+
+  //MP3
+  mySoftwareSerial.begin(9600, SERIAL_8N1, 16, 17);
+  if (!myDFPlayer.begin(mySoftwareSerial)) 
+  {
+    Serial.println(myDFPlayer.readType(), HEX);
+    Serial.println(F("Unable to begin:"));
+    Serial.println(F("1.Please recheck the connection!"));
+    Serial.println(F("2.Please insert the SD card!"));
+    while(true);
+  }
+  myDFPlayer.setTimeOut(500);
+  myDFPlayer.volume(0);
+  myDFPlayer.EQ(DFPLAYER_EQ_NORMAL);
+  myDFPlayer.outputDevice(DFPLAYER_DEVICE_SD);
+  for(int i=0; i<4; i++) mp3.sizeFolders[i] = myDFPlayer.readFileCountsInFolder(i + 1);
 }
 
 // Metody
@@ -212,6 +237,23 @@ void loop()
     }
   }
 
+  //MP3
+if(mp3.turnOn)
+{
+  if (myDFPlayer.available()) 
+  {
+    if (myDFPlayer.readType()==DFPlayerPlayFinished) 
+    {
+      Serial.println(myDFPlayer.read());
+      Serial.println(F("next--------------------"));
+      myDFPlayer.playLargeFolder(mp3.genre, random(1, mp3.sizeFolders[mp3.genre - 1]));  //Play next mp3 every 3 second.
+      Serial.println(F("readCurrentFileNumber--------------------"));
+      Serial.println(myDFPlayer.readCurrentFileNumber()); //read current play file number
+      delay(500);
+    }
+  }
+}
+
   // Sprawdzenie trybu światła
   if(light.turnOn == true)
   {
@@ -274,7 +316,7 @@ void loop()
     {
       case 1:
       {
-        String x = "1) Puls\nPuls: ";
+        String x = "Puls: ";
         x += String(pulse.heartRate);
         x += "bpm\nSp02: ";
         x += String(pulse.sp02);
@@ -320,7 +362,50 @@ void loop()
       }
       case 4:
       {
-        showLCD("D");
+        if(digitalRead(BUTTON_ACCEPT) == HIGH)
+        {
+          if(mp3.turnOn == true)
+          {
+             mp3.turnOn = false;
+             myDFPlayer.pause();
+             myDFPlayer.volume(0);
+          }
+          else
+          {
+            mp3.turnOn = true;
+            myDFPlayer.volume(30);
+            myDFPlayer.playLargeFolder(mp3.genre, random(1, mp3.sizeFolders[mp3.genre - 1]));
+          }
+        }
+        if(digitalRead(BUTTON_NEXT) == HIGH)
+        {
+          if(mp3.turnOn == false)
+          {
+            if(mp3.genre == 4)
+            {
+              mp3.genre = 1;
+            }
+            else
+            {
+              mp3.genre += 1;
+            }
+          }
+          Serial.println(mp3.turnOn);
+          Serial.println(mp3.genre);
+        }
+        String x = "Rodzaj muzyki:\n";
+        switch(mp3.genre)
+        {
+          case 1: x += "PRACA KLASYCZNA"; break;
+          case 2: x += "PRACA LOFI"; break;
+          case 3: x += "RELAKS NATURA"; break;
+          case 4: x += "RELAKS SOUNDTRACK"; break;
+        }
+        x += "\n";
+        x += "Status odtwarzania:\n";
+        if(mp3.turnOn) x += "ODTWARZANIE";
+        else x += "STOP";
+        showLCD(x);
         break;
       }
       case 5:
