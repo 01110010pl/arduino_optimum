@@ -2,8 +2,8 @@
 
 ## Wstęp
 
-<p align="center">
-  <img src="readme_files/file1.png" alt="drawing" width="200" style="margin-right: 20px"/>
+<p align="center" float="left">
+  <img src="readme_files/file1.png" alt="drawing" width="250"/>
   <img src="readme_files/file2.gif" alt="drawing" width="250"/>
 </p>
 
@@ -25,20 +25,15 @@
 
 ## Co działa, a co nie działa?
 
-### Działa
-
-* Temperatura
-* Tryb światła
-* Ekran
-* Przyciski
-* Menu
-
-### Nie działa
-
-* Tryb pracy
-* Pulsometr
-* Muzyka
+- [x] Temperatura
+- [x] Tryb światła
+- [x] Ekran
+- [x] Przyciski
+- [x] Menu
+- [ ] Tryb pracy
+- [ ] Pulsometr
+- [ ] Muzyka
 
 ## Schemat
 
-[Schemat jest pod tym linkiem](/schematic_diagram/optimum-project.pdf)
+[Schemat jest pod tym linkiem](/schematic_diagram/optimum-project.pdf) (NIE AKTUALNY!)
