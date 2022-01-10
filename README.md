@@ -1,7 +1,5 @@
 # Arduino Optimum Project
 
-## Wstęp
-
 <p align="center"><img src="readme_files/file1.png" alt="drawing" width="250"/></p>
 
 <p align="center"><img src="readme_files/file2.gif" alt="drawing" width="250"/></p>
@@ -31,7 +29,22 @@
 - [x] Menu
 - [ ] Tryb pracy
 - [ ] Pulsometr
-- [ ] Muzyka
+- [x] Muzyka
+
+## Instrukcja obsługi
+
+Przyciski:
+
+- Czerwony(BUTTON_NEXT): 
+    * przełączanie trybów w menu
+    * przełączanie opcji w trybach
+    * przełączanie rodzajów muzyki w trybie "Muzyka"
+- Zółty(BUTTON_ACCEPT)
+    * Wchodzenie w dany, wybrany tryb
+    * Zatrzymywanie/Odtwarzanie muzyki
+    * Włączanie i wyłączanie światła
+- Niebieski(BUTTON_EXIT)
+    * Wychodzenie z trybów
 
 ## Schemat
 
