@@ -12,6 +12,36 @@
 #define DHTTYPE DHT11
 #define REPORTING_PERIOD_MS 1000
 
+// Zmienne
+uint32_t tsLastReport = 0;
+const int WIDTH_OLED = 128;
+const int HEIGHT_OLED = 64;
+const int BUTTON_NEXT = 39;
+const int BUTTON_ACCEPT = 36;
+const int BUTTON_EXIT = 34;
+const int LED_RED = 18;
+const int LED_GREEN= 19;
+const int LED_BLUE = 23;
+int delayms = 100;
+
+// Inicjalizacja czujników
+DHT dht(DHTPIN, DHTTYPE);
+PulseOximeter pox;
+Adafruit_SSD1306 OLEDscreen(WIDTH_OLED, HEIGHT_OLED, &Wire, -1);
+HardwareSerial mySoftwareSerial(1);
+DFRobotDFPlayerMini myDFPlayer;
+
+// Lista funkcji
+void intro();
+void setup();
+void puls();
+void onBeatDetected();
+void showOLED(String message, float sizeMessage = 1.5, float cursorX = 0.0, float cursorY = 0.0, int delayShow = 250, bool clearBegin = true);
+void loop();
+void checkBUTTON_NEXT();
+void checkBUTTON_ACCEPT();
+void checkBUTTON_EXIT();
+
 // Klasy
 class Temperature 
 {
@@ -31,6 +61,36 @@ class Temperature
       indHF = 0;
       modeC = true;
     }
+    void getTemperature()
+    {
+      humidity = dht.readHumidity();
+      temC = dht.readTemperature();
+      temF = dht.readTemperature(true);
+      if (isnan(humidity) || isnan(temC) || isnan(temF)) 
+      {
+        Serial.println(F("Failed to read from DHT sensor!"));
+        return;
+      }
+      indHF = dht.computeHeatIndex(temF, humidity);
+      indHC = dht.computeHeatIndex(temC, humidity, false);
+    }
+    void temperatureMode()
+    {
+      String x = "";
+      if(modeC)
+      {
+        x = "Temperatura: \n" + String(temC) + "C\n";
+        x += "Wilgotnosc: \n" + String(humidity) + "%\n";
+        x += "Indeks ciepla: \n" + String(indHC) + " C";
+      }
+      else
+      {
+        x = "Temperatura: \n" + String(temF) + "F\n";
+        x += "Wilgotnosc: \n" + String(humidity) + "%\n";
+        x += "Indeks ciepla: \n" + String(indHF) + " F";
+      }
+      showOLED(x);
+    }
 };
 
 class Pulse
@@ -38,6 +98,15 @@ class Pulse
   public:
     float heartRate;
     float sp02;
+    void pulseMode()
+    {
+      String x = "Puls: ";
+      x += String(heartRate);
+      x += "bpm\nSp02: ";
+      x += String(sp02);
+      x + "%";
+      showOLED(x);
+    }
 };
 
 class Light
@@ -47,6 +116,28 @@ class Light
     Light() 
     {
       turnOn = false;
+    }
+    void checkLight()
+    {
+      if(turnOn == true)
+      {
+        digitalWrite(LED_RED, HIGH);
+        digitalWrite(LED_BLUE, HIGH);
+        digitalWrite(LED_GREEN, HIGH);
+      }
+      else
+      {
+        digitalWrite(LED_RED, LOW);
+        digitalWrite(LED_BLUE, LOW);
+        digitalWrite(LED_GREEN, LOW);
+      }
+    }
+    void lightMode()
+    {
+      String x = "Tryb automatyczny swiatla\nStatus: ";
+      if(turnOn == false) x += "OFF";
+      else x += "ON";
+      showOLED(x);
     }
 };
 
@@ -60,6 +151,40 @@ class MP3
     {
        turnOn = false;
        genre = 1; 
+    }
+    void checkActualMP3()
+    {
+      if(turnOn)
+      {
+        if (myDFPlayer.available()) 
+        {
+          if (myDFPlayer.readType()==DFPlayerPlayFinished) 
+          {
+            Serial.println(myDFPlayer.read());
+            Serial.println(F("next--------------------"));
+            myDFPlayer.playLargeFolder(genre, random(1, sizeFolders[genre - 1]));  //Play next mp3 every 3 second.
+            Serial.println(F("readCurrentFileNumber--------------------"));
+            Serial.println(myDFPlayer.readCurrentFileNumber()); //read current play file number
+            delay(500);
+          }
+        }
+      }
+    }
+    void musicMode()
+    {
+        String x = "Rodzaj muzyki:\n";
+        switch(genre)
+        {
+          case 1: x += "PRACA KLASYCZNA"; break;
+          case 2: x += "PRACA LOFI"; break;
+          case 3: x += "RELAKS NATURA"; break;
+          case 4: x += "RELAKS SOUNDTRACK"; break;
+        }
+        x += "\n";
+        x += "Status odtwarzania:\n";
+        if(turnOn) x += "ODTWARZANIE";
+        else x += "STOP";
+        showOLED(x, 1.5, 0, 0, 250);
     }
 };
 
@@ -76,40 +201,12 @@ class Menu
     }
 };
 
-// Zmienne
-uint32_t tsLastReport = 0;
-const int WIDTH_OLED = 128;
-const int HEIGHT_OLED = 64;
-const int BUTTON_NEXT = 39;
-const int BUTTON_ACCEPT = 36;
-const int BUTTON_EXIT = 34;
-const int LED_RED = 18;
-const int LED_GREEN= 19;
-const int LED_BLUE = 23;
-int delayms = 100;
+// Inicjalizacja obiektów czujników
 Temperature temp;
 Menu menu;
 MP3 mp3;
 Light light;
 Pulse pulse;
-
-// Inicjalizacja czujników
-DHT dht(DHTPIN, DHTTYPE);
-PulseOximeter pox;
-Adafruit_SSD1306 OLEDscreen(WIDTH_OLED, HEIGHT_OLED, &Wire, -1);
-HardwareSerial mySoftwareSerial(1);
-DFRobotDFPlayerMini myDFPlayer;
-
-// Lista funkcji
-void intro();
-void setup();
-void puls();
-void onBeatDetected();
-void showOLED(String message, float sizeMessage = 1.5, float cursorX = 0.0, float cursorY = 0.0, int delayShow = 250, bool clearBegin = true);
-void loop();
-void checkBUTTON_NEXT();
-void checkBUTTON_ACCEPT();
-void checkBUTTON_EXIT();
 
 // Setup
 void setup() 
@@ -171,54 +268,21 @@ void loop()
   checkBUTTON_EXIT();
   
   // MP3
-  if(mp3.turnOn)
-  {
-    if (myDFPlayer.available()) 
-    {
-      if (myDFPlayer.readType()==DFPlayerPlayFinished) 
-      {
-        Serial.println(myDFPlayer.read());
-        Serial.println(F("next--------------------"));
-        myDFPlayer.playLargeFolder(mp3.genre, random(1, mp3.sizeFolders[mp3.genre - 1]));  //Play next mp3 every 3 second.
-        Serial.println(F("readCurrentFileNumber--------------------"));
-        Serial.println(myDFPlayer.readCurrentFileNumber()); //read current play file number
-        delay(500);
-      }
-    }
-  }
+  mp3.checkActualMP3();
 
   // Sprawdzenie trybu światła
-  if(light.turnOn == true)
-  {
-    digitalWrite(LED_RED, HIGH);
-    digitalWrite(LED_BLUE, HIGH);
-    digitalWrite(LED_GREEN, HIGH);
-  }
-  else
-  {
-    digitalWrite(LED_RED, LOW);
-    digitalWrite(LED_BLUE, LOW);
-    digitalWrite(LED_GREEN, LOW);
-  }
+  light.checkLight();
 
   // Aktualizacja temperatury
-  temp.humidity = dht.readHumidity();
-  temp.temC = dht.readTemperature();
-  temp.temF = dht.readTemperature(true);
-  if (isnan(temp.humidity) || isnan(temp.temC) || isnan(temp.temF)) 
-  {
-    Serial.println(F("Failed to read from DHT sensor!"));
-    return;
-  }
-  temp.indHF = dht.computeHeatIndex(temp.temF, temp.humidity);
-  temp.indHC = dht.computeHeatIndex(temp.temC, temp.humidity, false);
+  temp.getTemperature();
+
   if(menu.side2 == 1)
   {
     switch(menu.side1)
     {
       case 1: showOLED("PULS", 1, 10, 10); break;
       case 2: showOLED("TEMPERATURA", 1, 10, 10); break;
-      case 3: showOLED("TEMPERATURA", 1, 10, 10); break;
+      case 3: showOLED("SWIATLO", 1, 10, 10); break;
       case 4: showOLED("MUZYKA", 1, 10, 10); break;
       case 5: showOLED("TRYB PRACY", 1, 10, 10); break;
     }
@@ -227,60 +291,10 @@ void loop()
   {
     switch(menu.side1)
     {
-      case 1:
-      {
-        String x = "Puls: ";
-        x += String(pulse.heartRate);
-        x += "bpm\nSp02: ";
-        x += String(pulse.sp02);
-        x + "%";
-        showOLED(x);
-        break;
-      }
-      case 2:
-      {
-        String x = "";
-        if(temp.modeC)
-        {
-            x = "Temperatura: \n" + String(temp.temC) + "C\n";
-            x += "Wilgotnosc: \n" + String(temp.humidity) + "%\n";
-            x += "Indeks ciepla: \n" + String(temp.indHC) + " C";
-          }
-          else
-          {
-            x = "Temperatura: \n" + String(temp.temF) + "F\n";
-            x += "Wilgotnosc: \n" + String(temp.humidity) + "%\n";
-            x += "Indeks ciepla: \n" + String(temp.indHF) + " F";
-          }
-        showOLED(x);
-        break;
-      }
-      case 3:
-      {
-        String x = "Tryb automatyczny swiatla\nStatus: ";
-        if(light.turnOn == false) x += "OFF";
-        else x += "ON";
-        showOLED(x);
-        delay(250);
-        break;
-      }
-      case 4:
-      {
-        String x = "Rodzaj muzyki:\n";
-        switch(mp3.genre)
-        {
-          case 1: x += "PRACA KLASYCZNA"; break;
-          case 2: x += "PRACA LOFI"; break;
-          case 3: x += "RELAKS NATURA"; break;
-          case 4: x += "RELAKS SOUNDTRACK"; break;
-        }
-        x += "\n";
-        x += "Status odtwarzania:\n";
-        if(mp3.turnOn) x += "ODTWARZANIE";
-        else x += "STOP";
-        showOLED(x, 1.5, 0, 0, 250);
-        break;
-      }
+      case 1: pulse.pulseMode(); break;
+      case 2: temp.temperatureMode(); break;
+      case 3: light.lightMode(); break;
+      case 4: mp3.musicMode(); break;
       case 5:
       {
         break;
@@ -293,20 +307,6 @@ void loop()
 void onBeatDetected()
 {
     Serial.println("Wykryto puls!");
-}
-
-void puls()
-{
-  pox.update();
-  if (millis() - tsLastReport > REPORTING_PERIOD_MS) 
-  {
-      Serial.print("Heart rate:");
-      Serial.print(pox.getHeartRate());
-      Serial.print("bpm / SpO2:");
-      Serial.print(pox.getSpO2());
-      Serial.println("%");
-      tsLastReport = millis();
-  }
 }
 
 void showOLED(String message, float sizeMessage, float cursorX, float cursorY , int delayShow, bool clearBegin)
@@ -379,10 +379,11 @@ void checkBUTTON_ACCEPT()
     {
       switch(menu.side1)
       {
-        case 2:
+        case 3:
         {
           if(light.turnOn == true) light.turnOn = false;
           else light.turnOn = true;
+          break;
         }
         case 4:
         {
