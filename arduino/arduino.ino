@@ -86,7 +86,6 @@ const int BUTTON_EXIT = 34;
 const int LED_RED = 18;
 const int LED_GREEN= 19;
 const int LED_BLUE = 23;
-float arrayOLEDvoid[2] = {0, 0};
 int delayms = 100;
 Temperature temp;
 Menu menu;
@@ -108,6 +107,9 @@ void puls();
 void onBeatDetected();
 void showOLED(String message, float sizeMessage = 1.5, float cursorX = 0.0, float cursorY = 0.0, int delayShow = 250, bool clearBegin = true);
 void loop();
+void checkBUTTON_NEXT();
+void checkBUTTON_ACCEPT();
+void checkBUTTON_EXIT();
 
 // Setup
 void setup() 
@@ -164,28 +166,10 @@ void setup()
 void loop() 
 {
   // Sprawdzenie przycisków
-  if(digitalRead(BUTTON_NEXT) == HIGH)
-  {
-    if(menu.side2 == 1)
-    {
-      if(menu.side1 == 5) menu.side1 = 1;
-      else menu.side1 += 1;
-    }
-  }
-  if(digitalRead(BUTTON_ACCEPT) == HIGH)
-  {
-    if(menu.side2 == 1) menu.side2 = 2;
-  }
-  if(digitalRead(BUTTON_EXIT) == HIGH)
-  {
-    if(menu.side2 == 2) menu.side2 = 1;
-    else
-    {
-      if(menu.side1 == 1) menu.side1 = 5;
-      else menu.side1 -= 1;
-    }
-  }
-
+  checkBUTTON_NEXT();
+  checkBUTTON_ACCEPT();
+  checkBUTTON_EXIT();
+  
   // MP3
   if(mp3.turnOn)
   {
@@ -232,31 +216,11 @@ void loop()
   {
     switch(menu.side1)
     {
-      case 1:
-      {
-        showOLED("1) Puls");
-        break;
-      }
-      case 2:
-      {
-        showOLED("2) Temperatura");
-        break;
-      }
-      case 3:
-      {
-        showOLED("3) Swiatlo");
-        break;
-      }
-      case 4:
-      {
-        showOLED("4) Muzyka");
-        break;
-      }
-      case 5:
-      {
-        showOLED("5) Tryb pracy");
-        break;
-      }
+      case 1: showOLED("PULS", 1, 10, 10); break;
+      case 2: showOLED("TEMPERATURA", 1, 10, 10); break;
+      case 3: showOLED("TEMPERATURA", 1, 10, 10); break;
+      case 4: showOLED("MUZYKA", 1, 10, 10); break;
+      case 5: showOLED("TRYB PRACY", 1, 10, 10); break;
     }
   }
   else
@@ -275,11 +239,6 @@ void loop()
       }
       case 2:
       {
-        if(digitalRead(BUTTON_NEXT) == HIGH)
-        {
-          if(temp.modeC) temp.modeC = false;
-          else temp.modeC = true;
-        }
         String x = "";
         if(temp.modeC)
         {
@@ -298,50 +257,15 @@ void loop()
       }
       case 3:
       {
-        if(digitalRead(BUTTON_ACCEPT) == HIGH)
-        {
-          if(light.turnOn == true) light.turnOn = false;
-          else light.turnOn = true;
-        }
         String x = "Tryb automatyczny swiatla\nStatus: ";
         if(light.turnOn == false) x += "OFF";
         else x += "ON";
         showOLED(x);
+        delay(250);
         break;
       }
       case 4:
       {
-        if(digitalRead(BUTTON_ACCEPT) == HIGH)
-        {
-          if(mp3.turnOn == true)
-          {
-             mp3.turnOn = false;
-             myDFPlayer.pause();
-             myDFPlayer.volume(0);
-          }
-          else
-          {
-            mp3.turnOn = true;
-            myDFPlayer.volume(30);
-            myDFPlayer.playLargeFolder(mp3.genre, random(1, mp3.sizeFolders[mp3.genre - 1]));
-          }
-        }
-        if(digitalRead(BUTTON_NEXT) == HIGH)
-        {
-          if(mp3.turnOn == false)
-          {
-            if(mp3.genre == 4)
-            {
-              mp3.genre = 1;
-            }
-            else
-            {
-              mp3.genre += 1;
-            }
-          }
-          Serial.println(mp3.turnOn);
-          Serial.println(mp3.genre);
-        }
         String x = "Rodzaj muzyki:\n";
         switch(mp3.genre)
         {
@@ -410,4 +334,86 @@ void intro()
     }
     showOLED("by POGGERS TEAM", 1, 22, 45, 1000, false);
     OLEDscreen.clearDisplay();
+}
+
+void checkBUTTON_NEXT()
+{
+  if(digitalRead(BUTTON_NEXT) == HIGH)
+  {
+    if(menu.side2 == 1)
+    {
+      if(menu.side1 == 5) menu.side1 = 1;
+      else menu.side1 += 1;
+    }
+    else
+    {
+      switch(menu.side1)
+      {
+        case 2:
+        {
+          if(temp.modeC) temp.modeC = false;
+          else temp.modeC = true;
+          break;
+        }
+        case 4:
+        {
+          if(mp3.turnOn == false)
+          {
+            if(mp3.genre == 4) mp3.genre = 1;
+            else mp3.genre += 1;
+          }
+          break;
+        }
+      }
+    }
+  
+  }
+}
+
+void checkBUTTON_ACCEPT()
+{
+  if(digitalRead(BUTTON_ACCEPT) == HIGH)
+  {
+    if(menu.side2 == 1) menu.side2 = 2;
+    else
+    {
+      switch(menu.side1)
+      {
+        case 2:
+        {
+          if(light.turnOn == true) light.turnOn = false;
+          else light.turnOn = true;
+        }
+        case 4:
+        {
+          if(mp3.turnOn == true)
+          {
+            mp3.turnOn = false;
+            myDFPlayer.pause();
+            myDFPlayer.volume(0);
+          }
+          else
+          {
+            mp3.turnOn = true;
+            myDFPlayer.volume(30);
+            myDFPlayer.playLargeFolder(mp3.genre, random(1, mp3.sizeFolders[mp3.genre - 1]));
+          }
+          break;
+        }
+      }
+    }
+  }
+}
+
+void checkBUTTON_EXIT()
+{
+  if(digitalRead(BUTTON_EXIT) == HIGH)
+  {
+    if(menu.side2 == 2) menu.side2 = 1;
+    else
+    {
+      if(menu.side1 == 1) menu.side1 = 5;
+      else menu.side1 -= 1;
+    }
+  }
 }
