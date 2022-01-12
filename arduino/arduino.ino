@@ -61,6 +61,7 @@ class Temperature
       indHC = 0;
       indHF = 0;
       modeC = true;
+      modeCWorkMode = true;
     }
     void getTemperature()
     {
@@ -161,35 +162,50 @@ class MP3
     bool turnOn;
     int genre;
     int sizeFolders[4] = {0, 0, 0, 0};
-    //int turnOnWorkMode;
-    //int genreWorkMode;
+    int turnOnWorkMode;
+    int genreWorkMode;
     MP3()
     {
        turnOn = false;
-       genre = 1; 
+       genre = 1;
+       genreWorkMode = 1;
+       turnOnWorkMode = false;
     }
-    void checkActualMP3()
+    void checkActualMP3(bool workMode)
     {
-      if(turnOn)
+      bool x = false;
+      int y = 0;
+      if(workMode)
+      {
+        x = turnOnWorkMode;
+        y = genreWorkMode;
+      }
+      else
+      {
+        x = turnOn;
+        y = genre;
+      }
+      if(x)
       {
         if (myDFPlayer.available()) 
         {
           if (myDFPlayer.readType()==DFPlayerPlayFinished) 
           {
             Serial.println(myDFPlayer.read());
-            Serial.println(F("next--------------------"));
-            myDFPlayer.playLargeFolder(genre, random(1, sizeFolders[genre - 1]));  //Play next mp3 every 3 second.
-            Serial.println(F("readCurrentFileNumber--------------------"));
-            Serial.println(myDFPlayer.readCurrentFileNumber()); //read current play file number
+            myDFPlayer.playLargeFolder(y, random(1, sizeFolders[y - 1]));
+            Serial.println(myDFPlayer.readCurrentFileNumber());
             delay(500);
           }
         }
       }
     }
-    void musicMode()
+    void musicMode(bool workMode = false)
     {
         String x = "Rodzaj muzyki:\n";
-        switch(genre)
+        int y = 0;
+        if(workMode) y = genreWorkMode;
+        else y = genre;
+        switch(y)
         {
           case 1: x += "PRACA KLASYCZNA"; break;
           case 2: x += "PRACA LOFI"; break;
@@ -198,7 +214,10 @@ class MP3
         }
         x += "\n";
         x += "Status odtwarzania:\n";
-        if(turnOn) x += "ODTWARZANIE";
+        bool a = false;
+        if(workMode) a = turnOnWorkMode;
+        else a = turnOn;
+        if(a) x += "ODTWARZANIE";
         else x += "STOP";
         showOLED(x, 1.5, 0, 0, 250);
     }
@@ -306,7 +325,7 @@ void loop()
   checkBUTTON_EXIT();
   
   // MP3
-  mp3.checkActualMP3();
+  mp3.checkActualMP3(workmode.turnOn);
 
   // Sprawdzenie trybu światła
   light.checkLight(workmode.turnOn);
@@ -349,15 +368,19 @@ void loop()
           }
           case 3:
           {
-            temp.temperatureMode(true);
+            temp.temperatureMode(!workmode.turnOn);
             break;
           }
           case 4:
           {
-            light.lightMode(true);
+            light.lightMode(!workmode.turnOn);
             break;
           }; //light
-          case 5: break; //music
+          case 5: 
+          {
+            mp3.musicMode(!workmode.turnOn);
+            break;
+          } //music
         }
       }
     }
@@ -520,6 +543,23 @@ void checkBUTTON_ACCEPT()
               else light.turnOnWorkMode = true;
               break;
             }
+            case 5:
+            {
+              if(workmode.music)
+              {
+                workmode.music = false;
+                mp3.turnOnWorkMode = false;
+                showOLED("MUZYKA WYLACZONA!", 1, 0, 0, 1000);        
+              }
+              else
+              {
+                workmode.music =  true;
+                mp3.turnOnWorkMode = true;
+                showOLED("MUZYKA WLACZONA!", 1, 0, 0, 1000);   
+              }
+              
+              break;
+            }
           }
         }
       }
@@ -547,6 +587,15 @@ void checkBUTTON_EXIT()
             {
               if(temp.modeCWorkMode) temp.modeCWorkMode = false;
               else temp.modeCWorkMode = true;
+              break;
+            }
+            case 5:
+            {
+              if(!mp3.turnOnWorkMode)
+              {
+                if(mp3.genreWorkMode == 4) mp3.genreWorkMode = 1;
+                else mp3.genreWorkMode += 1;
+              }
               break;
             }
           }
