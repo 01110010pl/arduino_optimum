@@ -122,9 +122,15 @@ class Light
     {
       turnOn = false;
     }
-    void checkLight()
+    void checkLight(bool workMode)
     {
-      if(turnOn == true)
+      bool x = false;
+      if(workMode)
+      {
+        x = turnOnWorkMode;
+      }
+      else x = turnOn;
+      if(x == true)
       {
         digitalWrite(LED_RED, HIGH);
         digitalWrite(LED_BLUE, HIGH);
@@ -137,10 +143,13 @@ class Light
         digitalWrite(LED_GREEN, LOW);
       }
     }
-    void lightMode()
+    void lightMode(bool workMode = false)
     {
       String x = "Tryb automatyczny swiatla\nStatus: ";
-      if(turnOn == false) x += "OFF";
+      bool a = false;
+      if(workMode) a = turnOnWorkMode;
+      else a = turnOn;
+      if(a == false) x += "OFF";
       else x += "ON";
       showOLED(x);
     }
@@ -300,7 +309,7 @@ void loop()
   mp3.checkActualMP3();
 
   // Sprawdzenie trybu światła
-  light.checkLight();
+  light.checkLight(workmode.turnOn);
 
   // Aktualizacja temperatury
   temp.getTemperature();
@@ -343,7 +352,11 @@ void loop()
             temp.temperatureMode(true);
             break;
           }
-          case 4: break; //light
+          case 4:
+          {
+            light.lightMode(true);
+            break;
+          }; //light
           case 5: break; //music
         }
       }
@@ -465,11 +478,13 @@ void checkBUTTON_ACCEPT()
               {
                  workmode.pulse = false;
                  showOLED("SLEDZENIE PULSU WYLACZONE!");
+                 break;
               }
               else
               {
                 workmode.pulse =  true;
                 showOLED("SLEDZENIE PULSU WLACZONE!");
+                break;
               }
             }
             case 3:
@@ -478,12 +493,32 @@ void checkBUTTON_ACCEPT()
               {
                 workmode.temperature = false;
                 showOLED("SLEDZENIE TEMPERATURY WYLACZONE!", 1, 0, 0, 1000);
+                break;
               }
               else
               {
                 workmode.temperature =  true;
                 showOLED("SLEDZENIE TEMPERATURY WLACZONE!", 1, 0, 0, 1000);
+                break;
               }
+            }
+            case 4:
+            {
+              if(workmode.light)
+              {
+                workmode.light = false;
+                showOLED("SLEDZENIE SWIATLA WYLACZONE!", 1, 0, 0, 1000);
+        
+              }
+              else
+              {
+                workmode.light =  true;
+                showOLED("SLEDZENIE SWIATLA WLACZONE!", 1, 0, 0, 1000);
+                
+              }
+              if(light.turnOnWorkMode) light.turnOnWorkMode = false;
+              else light.turnOnWorkMode = true;
+              break;
             }
           }
         }
