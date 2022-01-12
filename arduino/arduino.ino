@@ -52,6 +52,7 @@ class Temperature
     float indHC;
     float indHF;
     bool modeC;
+    bool modeCWorkMode;
     Temperature()
     {
       temC = 0;
@@ -74,10 +75,13 @@ class Temperature
       indHF = dht.computeHeatIndex(temF, humidity);
       indHC = dht.computeHeatIndex(temC, humidity, false);
     }
-    void temperatureMode()
+    void temperatureMode(bool workMode = false)
     {
+      bool a = false;
+      if(workMode) a = modeCWorkMode;
+      else a = modeC;
       String x = "";
-      if(modeC)
+      if(a)
       {
         x = "Temperatura: \n" + String(temC) + "C\n";
         x += "Wilgotnosc: \n" + String(humidity) + "%\n";
@@ -113,6 +117,7 @@ class Light
 {
   public:
     bool turnOn;
+    bool turnOnWorkMode;
     Light() 
     {
       turnOn = false;
@@ -147,6 +152,8 @@ class MP3
     bool turnOn;
     int genre;
     int sizeFolders[4] = {0, 0, 0, 0};
+    //int turnOnWorkMode;
+    //int genreWorkMode;
     MP3()
     {
        turnOn = false;
@@ -201,12 +208,34 @@ class Menu
     }
 };
 
+class WorkMode
+{
+  public:
+    bool turnOn;
+    bool temperature;
+    bool pulse;
+    bool music;
+    bool light;
+    int side;
+    bool workModeMenu;
+    WorkMode()
+    {
+      turnOn = false;
+      temperature = false;
+      pulse = false;
+      music = false;
+      light = false;
+      side = 1;
+    }
+};
+
 // Inicjalizacja obiektów czujników
 Temperature temp;
 Menu menu;
 MP3 mp3;
 Light light;
 Pulse pulse;
+WorkMode workmode;
 
 // Setup
 void setup() 
@@ -297,7 +326,26 @@ void loop()
       case 4: mp3.musicMode(); break;
       case 5:
       {
-        break;
+        switch(workmode.side)
+        {
+          case 1:
+          {
+            showOLED("PRACA");
+            break;
+          }
+          case 2:
+          {
+            pulse.pulseMode();
+            break;
+          }
+          case 3:
+          {
+            temp.temperatureMode(true);
+            break;
+          }
+          case 4: break; //light
+          case 5: break; //music
+        }
       }
     }
   }
@@ -364,6 +412,11 @@ void checkBUTTON_NEXT()
           }
           break;
         }
+        case 5:
+        {
+          if(workmode.side == 5) workmode.side = 1;
+          else workmode.side += 1;
+        }
       }
     }
   
@@ -401,6 +454,39 @@ void checkBUTTON_ACCEPT()
           }
           break;
         }
+        case 5:
+        {
+          switch(workmode.side)
+          {
+            case 1: break;
+            case 2:
+            {
+              if(workmode.pulse)
+              {
+                 workmode.pulse = false;
+                 showOLED("SLEDZENIE PULSU WYLACZONE!");
+              }
+              else
+              {
+                workmode.pulse =  true;
+                showOLED("SLEDZENIE PULSU WLACZONE!");
+              }
+            }
+            case 3:
+            {
+              if(workmode.temperature)
+              {
+                workmode.temperature = false;
+                showOLED("SLEDZENIE TEMPERATURY WYLACZONE!", 1, 0, 0, 1000);
+              }
+              else
+              {
+                workmode.temperature =  true;
+                showOLED("SLEDZENIE TEMPERATURY WLACZONE!", 1, 0, 0, 1000);
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -410,7 +496,32 @@ void checkBUTTON_EXIT()
 {
   if(digitalRead(BUTTON_EXIT) == HIGH)
   {
-    if(menu.side2 == 2) menu.side2 = 1;
+    if(menu.side2 == 2)
+    {
+      if(menu.side1 == 5)
+      {
+        if(workmode.side == 1)
+        {
+          menu.side2 = 1;
+        }
+        else
+        {
+          switch(workmode.side)
+          {
+            case 3:
+            {
+              if(temp.modeCWorkMode) temp.modeCWorkMode = false;
+              else temp.modeCWorkMode = true;
+              break;
+            }
+          }
+        }
+      }
+      else
+      {
+        menu.side2 = 1;
+      }
+    }
     else
     {
       if(menu.side1 == 1) menu.side1 = 5;
