@@ -211,8 +211,9 @@ class WorkMode
     bool pulse;
     bool music;
     bool light;
-    int side;
-    bool workModeMenu;
+    int choosenModes[4] = {false, false, false, false}; // puls, temperatura, światło, muzyka
+    int index;
+    uint32_t timeLoop;
     WorkMode()
     {
       turnOn = false;
@@ -220,8 +221,17 @@ class WorkMode
       pulse = false;
       music = false;
       light = false;
-      side = 1;
+      index = 0;
+      timeLoop = 0;
     }
+};
+
+enum MODES
+{
+  PULSE = 0,
+  TEMPERATURE,
+  LIGHT,
+  MUSIC 
 };
 
 // Inicjalizacja obiektów czujników
@@ -282,6 +292,45 @@ void loop()
   checkBUTTON_ACCEPT();
   checkBUTTON_EXIT();
   
+  if(workmode.turnOn)
+  {
+    if(millis() - workmode.timeLoop > 5000)
+    {
+      for(int i=0; i<4; i++)
+      {
+        if((workmode.index != i)&&(workmode.choosenModes[i] == true))
+        {
+          workmode.index = i;
+          break;
+        }
+      }
+      workmode.timeLoop = millis();
+    }
+    switch(workmode.index)
+    {
+      case 0:
+      {
+        menu.side1 = 2;
+        break;
+      }
+      case 1:
+      {
+        menu.side1 = 3;
+        break;
+      }
+      case 2:
+      {
+        menu.side1 = 4;
+        break;
+      }
+      case 3:
+      {
+        menu.side1 = 5;
+        break;
+      }
+    }
+  }
+
   // MP3
   mp3.checkActualMP3();
 
@@ -362,6 +411,31 @@ void checkBUTTON_ACCEPT()
     {
       case 1:
       {
+        int checkFalses = -1;
+        for(int i=0; i<4; i++)
+        {
+          if(workmode.choosenModes[i] != false)
+          {
+            checkFalses = i;
+            break;
+          }
+        }
+        if(checkFalses != -1)
+        {
+          for(int i=0; i<4; i++)
+          {
+            if(workmode.choosenModes[i] == true)
+            {
+              workmode.index = i;
+              break;
+            }
+          }
+          workmode.turnOn = true;
+        }
+        else
+        {
+          showOLED("NIE WYBRANO ŻADNEGO TRYBU!", 1, 25, 25, 1000, true);
+        }
         break;
       }
       case 2:
@@ -372,12 +446,14 @@ void checkBUTTON_ACCEPT()
         {
           showOLED("TRYB PULSU", 1, 50, 25, 1);
           showOLED("WLACZONO!", 1, 35, 40, 500, false);
+          workmode.choosenModes[PULSE] = true;
           OLEDscreen.clearDisplay();
         }
         else
         {
           showOLED("TRYB PULSU", 1, 50, 25, 1);
           showOLED("WYLACZONO!", 1, 35, 40, 500, false);
+          workmode.choosenModes[PULSE] = false;
           OLEDscreen.clearDisplay();
         }
         break;
@@ -390,12 +466,14 @@ void checkBUTTON_ACCEPT()
         {
           showOLED("TRYB TEMPERATURY", 1, 30, 25, 1);
           showOLED("WLACZONO!", 1, 30, 40, 500, false);
+          workmode.choosenModes[TEMPERATURE] = true;
           OLEDscreen.clearDisplay();
         }
         else
         {
           showOLED("TRYB EMPERATURY", 1, 30, 25, 1);
           showOLED("WYLACZONO!", 1, 30, 40, 500, false);
+          workmode.choosenModes[TEMPERATURE] = false;
           OLEDscreen.clearDisplay();
         }
         break;
@@ -408,6 +486,7 @@ void checkBUTTON_ACCEPT()
         {
           showOLED("TRYB SWIATLA", 1, 30, 25, 1);
           showOLED("WLACZONO!", 1, 30, 40, 500, false);
+          workmode.choosenModes[LIGHT] = true;
           OLEDscreen.clearDisplay();
           light.turnOn = true;
         }
@@ -415,6 +494,7 @@ void checkBUTTON_ACCEPT()
         {
           showOLED("TRYB SWIATLA", 1, 30, 25, 1);
           showOLED("WYLACZONO!", 1, 30, 40, 500, false);
+          workmode.choosenModes[LIGHT] = false;
           light.turnOn = false;
           OLEDscreen.clearDisplay();
         }
@@ -428,7 +508,8 @@ void checkBUTTON_ACCEPT()
             myDFPlayer.pause();
             myDFPlayer.volume(0);
             showOLED("TRYB MUZYKI", 1, 30, 25, 1);
-            showOLED("WLACZONO!", 1, 30, 40, 500, false);
+            showOLED("WYLACZONO!", 1, 30, 40, 500, false);
+            workmode.choosenModes[MUSIC] = false;
             OLEDscreen.clearDisplay();
           }
           else
@@ -437,61 +518,14 @@ void checkBUTTON_ACCEPT()
             myDFPlayer.volume(30);
             myDFPlayer.playLargeFolder(mp3.genre, random(1, mp3.sizeFolders[mp3.genre - 1]));
             showOLED("TRYB MUZYKI", 1, 30, 25, 1);
-            showOLED("WYLACZONO!", 1, 30, 40, 500, false);
+            showOLED("WLACZONO!", 1, 30, 40, 500, false);
+            workmode.choosenModes[MUSIC] = true;
             OLEDscreen.clearDisplay();
           }
           break;
       }
     }
   }    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-//    
-//    if(menu.side2 == 1) menu.side2 = 2;
-//    else
-//    {
-//      switch(menu.side1)
-//      {
-//        case 3:
-//        {
-//          if(light.turnOn == true) light.turnOn = false;
-//          else light.turnOn = true;
-//          break;
-//        }
-//        case 4:
-//        {
-//          if(mp3.turnOn == true)
-//          {
-//            mp3.turnOn = false;
-//            myDFPlayer.pause();
-//            myDFPlayer.volume(0);
-//          }
-//          else
-//          {
-//            mp3.turnOn = true;
-//            myDFPlayer.volume(30);
-//            myDFPlayer.playLargeFolder(mp3.genre, random(1, mp3.sizeFolders[mp3.genre - 1]));
-//          }
-//          break;
-//        }
-//        case 5:
-//        {
-//          
-//        }
-//      }
-//    }
-//  }
 }
 
 void checkBUTTON_EXIT()
