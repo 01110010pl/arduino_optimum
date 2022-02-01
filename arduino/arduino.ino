@@ -362,7 +362,7 @@ void loop()
   }
   else
   {
-    showOLED("Czy chcesz zakonczyc tryb pracy?", 1, 5, 5, 1, false);
+    showOLED("Czy chcesz zakonczyc tryb pracy?", 1, 5, 5, 1, true);
     showOLED("CZERWONY - TAK", 1, 5, 35, 1, false);
     showOLED("NIEBIESKI - NIE", 1, 5, 45, 1000, false);
   }
