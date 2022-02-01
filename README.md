@@ -4,6 +4,10 @@
 
 <p align="center"><img src="readme_files/file2.gif" alt="drawing" width="250"/></p>
 
+<p align="center"><img src="readme_files/file3.jpg" alt="drawing" width="250"/></p>
+
+<p align="center"><img src="readme_files/file4.jpg" alt="drawing" width="250"/></p>
+
 ## Elementy
 
 - 1x MAX30100/RCWL-0530 (Pulsometr)
@@ -17,7 +21,8 @@
 - 3x Przyciski
 - 1x Głośnik YD30
 - 2x Rezystor 470R
-- 4x Rezystor 10k
+- 3x Rezystor 10k
+- 3x Rezystor 1k
 - 2x Rezystor 2.7k
 
 ## Co działa, a co nie działa?
@@ -27,25 +32,32 @@
 - [x] Ekran
 - [x] Przyciski
 - [x] Menu
-- [ ] Tryb pracy
+- [x] Tryb pracy*
 - [ ] Pulsometr
 - [x] Muzyka
+
+*gdyby było więcej czasu byłby bardziej rozbudowany, a tak to jest to co jest
 
 ## Instrukcja obsługi
 
 Przyciski:
 
-- Czerwony(BUTTON_NEXT): 
-    * przełączanie trybów w menu
-    * przełączanie opcji w trybach
-    * przełączanie rodzajów muzyki w trybie "Muzyka"
-- Zółty(BUTTON_ACCEPT)
-    * Wchodzenie w dany, wybrany tryb
-    * Zatrzymywanie/Odtwarzanie muzyki
-    * Włączanie i wyłączanie światła
-- Niebieski(BUTTON_EXIT)
-    * Wychodzenie z trybów
+- Niebieski(BUTTON_NEXT): 
+    * przełączanie wyświetlanych trybów w menu
+- Czerwony(BUTTON_ACCEPT)
+    * Włączanie/Wyłączanie trybów
+    * Wychodzenie z trybu pracy
+- (BUTTON_EXIT)
+    * Przełączanie opcji trybów
 
 ## Schemat
 
-[Schemat jest pod tym linkiem](/schematic_diagram/optimum-project.pdf) (NIE AKTUALNY!)
+[Schemat jest pod tym linkiem](/schematic_diagram/optimum-project.pdf)
+
+# Autorzy
+
+* Dominika Jackowska
+* Jakub Jastrzębski
+* Karol Ambroziński
+* Michał Kotte
+* Wiktor Nguyen
