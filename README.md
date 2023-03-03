@@ -2,12 +2,6 @@
 
 <p align="center"><img src="readme_files/file1.png" alt="drawing" width="250"/></p>
 
-<p align="center"><img src="readme_files/file2.gif" alt="drawing" width="250"/></p>
-
-<p align="center"><img src="readme_files/file3.jpg" alt="drawing" width="250"/></p>
-
-<p align="center"><img src="readme_files/file4.jpg" alt="drawing" width="250"/></p>
-
 ## Elementy
 
 - 1x MAX30100/RCWL-0530 (Pulsometr)
